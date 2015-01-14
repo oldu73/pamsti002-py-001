@@ -84,18 +84,10 @@ class myguiapp(QWidget):
         self.w2.qle1 = QLineEdit(self.w2)
         self.w2.qle1.setFixedSize(100,25)
         self.w2.qle1.move(10,10)
-    
+
         self.w2.qle1.textChanged[str].connect(self.onChanged)
-        
-        self.w2.buttonA=QPushButton(self.trUtf8("a"), self.w2)
-        self.w2.buttonA.setFixedSize(20,20)
-        self.w2.buttonA.move(10,120)
-        self.connect(self.w2.buttonA, SIGNAL("clicked()"), self.buttonA)
-    
-        self.w2.buttonSpace=QPushButton(self.trUtf8("sp"), self.w2)
-        self.w2.buttonSpace.setFixedSize(25,20)
-        self.w2.buttonSpace.move(200,200)
-        self.connect(self.w2.buttonSpace, SIGNAL("clicked()"), self.buttonSpace)
+
+        self.initKeybLayout()
 
     def readAllData(self):
         global readdata
@@ -131,10 +123,13 @@ class myguiapp(QWidget):
         self.w2.close()
               
     def closeAll(self):
-          
-        fdw = os.open(myfifow, os.O_WRONLY)
-        os.write(fdw, "Quit\0")
-        os.close(fdw)
+
+        try:
+            fdw = os.open(myfifow, os.O_WRONLY)
+            os.write(fdw, "Quit\0")
+            os.close(fdw)
+        except:
+            print "Pipe already closed.."
 
         # Close all cursors
         cur1.close()
@@ -164,8 +159,34 @@ class myguiapp(QWidget):
                 tmpstr1 += item2.decode('latin-1').encode("utf-8") + " / "
             self.w2.projlist1.addItem(self.trUtf8(tmpstr1))
 
-    def buttonA(self):
-        self.w2.qle1.setText(self.w2.qle1.text()+'a')
+    def initButtonSpace(self):        
+        self.w2.buttonSpace=QPushButton(self.trUtf8("sp"), self.w2)
+        self.w2.buttonSpace.setFixedSize(25,20)
+        self.w2.buttonSpace.move(200,200)
+        self.connect(self.w2.buttonSpace, SIGNAL("clicked()"), self.buttonSpace)
 
     def buttonSpace(self):
         self.w2.qle1.setText(self.w2.qle1.text()+' ')
+
+    def initKeybLayout(self):
+        self.initButtonSpace()
+        
+        self.buttonA=keybButton("a", 10, 120, self.w2)
+        self.buttonB=keybButton("b", 30, 120, self.w2)
+        self.buttonC=keybButton("c", 50, 120, self.w2)
+        self.buttonD=keybButton("d", 70, 120, self.w2)
+        self.buttonE=keybButton("e", 90, 120, self.w2)
+        self.buttonF=keybButton("f", 110, 120, self.w2)
+
+class keybButton:
+    def __init__(self, letter, x, y, parent):
+        self.letter=letter
+        self.parent=parent
+        parent.button=QPushButton(parent.trUtf8(letter), parent)
+        parent.button.setFixedSize(20,20)
+        parent.button.move(x,y)
+        parent.connect(parent.button, SIGNAL("clicked()"), self.button)
+
+    def button(self):
+        self.parent.qle1.setText(self.parent.qle1.text()+self.letter)
+
