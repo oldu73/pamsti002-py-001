@@ -3,7 +3,7 @@
 
 #ref. file: pyqttoc001.py
 
-from PyQt4.QtGui import *
+from PyQt4.QtGui import QApplication
 import mywindow001, sys, os
 
 def main(args):

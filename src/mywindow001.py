@@ -1,9 +1,9 @@
 #! /usr/bin/python
 #-*-coding: utf-8 -*-
-import os,sys,MySQLdb
+
+import os,MySQLdb
 import PyQt4.QtGui as gui
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+from PyQt4.QtGui import QWidget, QLabel, QPushButton, QListWidget, QLineEdit
 from PyQt4.QtCore import QSocketNotifier, SIGNAL
 
 myfifor = "/tmp/ctopyfifo"
@@ -135,7 +135,7 @@ class myguiapp(QWidget):
         fdw = os.open(myfifow, os.O_WRONLY)
         os.write(fdw, "Quit\0")
         os.close(fdw)
-          
+
         # Close all cursors
         cur1.close()
         cur2.close()
@@ -143,9 +143,9 @@ class myguiapp(QWidget):
         cur4.close()
         # Close databases
         db.close()
-    
+
         os.close(self.fdr)
-        qApp.quit()
+        gui.qApp.quit()
 
     def onChanged(self, text):
         global projlist
