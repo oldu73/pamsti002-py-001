@@ -3,8 +3,8 @@
 
 import os,MySQLdb
 import PyQt4.QtGui as gui
-from PyQt4.QtGui import QWidget, QLabel, QPushButton, QListWidget, QLineEdit
-from PyQt4.QtCore import QSocketNotifier, SIGNAL
+from PyQt4.QtGui import QWidget, QLabel, QPushButton, QListWidget, QLineEdit, QRadioButton, QButtonGroup, QTimeEdit
+from PyQt4.QtCore import QSocketNotifier, SIGNAL, QTime
 
 myfifor = "/tmp/ctopyfifo"
 myfifow = "/tmp/pytocfifo"
@@ -29,6 +29,10 @@ widwith = 320
 widheight = 240
 
 class myguiapp(QWidget):
+    
+    keyBoardAlpha = {}
+    keyBoardNum = {}
+    
     def __init__(self):
         global projlist
         global clickonkeyb
@@ -54,10 +58,11 @@ class myguiapp(QWidget):
         
         self.notifier_r = QSocketNotifier(self.fdr, QSocketNotifier.Read)
         self.connect(self.notifier_r, SIGNAL('activated(int)'), self.readAllData)
-        
+
         self.w2=QWidget()
         self.w2.setFixedSize(widwith,widheight)
         self.w2.move(hpos,vpos)
+
         self.w2.label1=QLabel(self.trUtf8("init wait..."), self.w2)
         self.w2.label1.setFixedWidth(150)
         self.w2.label1.move(170,15)
@@ -65,11 +70,11 @@ class myguiapp(QWidget):
         self.w2.button1=QPushButton(self.trUtf8("OK"), self.w2)
         self.w2.button1.setFixedSize(40,25)
         self.w2.button1.move(120,10)
-        
+
         self.w2.projlist1 = QListWidget(self.w2)
         self.w2.projlist1.setFixedSize(300,75)
         self.w2.projlist1.move(10,40)
-        
+
         cur2.execute("SELECT projnumb,clientname,clientprojid,clientlocation FROM projdesc001")
         projlist = cur2.fetchall()
       
@@ -86,6 +91,40 @@ class myguiapp(QWidget):
         self.w2.qle1.move(10,10)
 
         self.w2.qle1.textChanged[str].connect(self.onChanged)
+        
+        self.w2.rb1 = QRadioButton(self.trUtf8("matin"),self.w2)
+        self.w2.rb1.move(210,120)
+
+        self.w2.rb2 = QRadioButton(self.trUtf8("après-midi"),self.w2)
+        self.w2.rb2.move(210,140)
+
+        matin_aprem = QButtonGroup()
+        matin_aprem.addButton(self.w2.rb1)
+        matin_aprem.addButton(self.w2.rb2)
+
+        self.w2.hourEdit = QTimeEdit(self.w2)  
+        self.w2.hourEdit.resize(45,40)
+        self.w2.hourEdit.move(212,180)
+        self.w2.hourEdit.setDisplayFormat("HH")    
+        self.w2.hourEdit.setTime(QTime.currentTime())   
+        
+        self.w2.minuteEdit = QTimeEdit(self.w2)  
+        self.w2.minuteEdit.resize(45,40)
+        self.w2.minuteEdit.move(266,180)
+        self.w2.minuteEdit.setDisplayFormat("mm")    
+        self.w2.minuteEdit.setTime(QTime.currentTime())
+
+        self.w2.timeDots=QLabel(self.trUtf8(":"), self.w2)
+        self.w2.timeDots.setFixedWidth(10)
+        self.w2.timeDots.move(260,192)
+        
+        self.w2.infoLabel=QLabel(self.trUtf8("info:"), self.w2)
+        self.w2.infoLabel.setFixedWidth(30)
+        self.w2.infoLabel.move(10,220)
+
+        self.w2.info=QLabel(self.trUtf8("..."), self.w2)
+        self.w2.info.setFixedWidth(260)
+        self.w2.info.move(50,220)
 
         self.initKeybLayout()
 
@@ -160,33 +199,102 @@ class myguiapp(QWidget):
             self.w2.projlist1.addItem(self.trUtf8(tmpstr1))
 
     def initButtonSpace(self):        
-        self.w2.buttonSpace=QPushButton(self.trUtf8("sp"), self.w2)
-        self.w2.buttonSpace.setFixedSize(25,20)
-        self.w2.buttonSpace.move(200,200)
+        self.w2.buttonSpace=QPushButton(self.trUtf8("-"), self.w2)
+        self.w2.buttonSpace.setFixedSize(40,20)
+        self.w2.buttonSpace.move(90,200)
         self.connect(self.w2.buttonSpace, SIGNAL("clicked()"), self.buttonSpace)
 
     def buttonSpace(self):
         self.w2.qle1.setText(self.w2.qle1.text()+' ')
 
+    def initButtonBackSpace(self):        
+        self.w2.buttonBackSpace=QPushButton(self.trUtf8("<"), self.w2)
+        self.w2.buttonBackSpace.setFixedSize(40,20)
+        self.w2.buttonBackSpace.move(90,120)
+        self.connect(self.w2.buttonBackSpace, SIGNAL("clicked()"), self.buttonBackSpace)
+
+    def buttonBackSpace(self):
+        self.w2.qle1.setText(self.w2.qle1.text()[:-1])
+
+    def initButtonZero(self):        
+        self.w2.buttonZero=QPushButton(self.trUtf8("0"), self.w2)
+        self.w2.buttonZero.setFixedSize(40,20)
+        self.w2.buttonZero.move(140,180)
+        self.connect(self.w2.buttonZero, SIGNAL("clicked()"), self.buttonZero)
+
+    def buttonZero(self):
+        self.w2.qle1.setText(self.w2.qle1.text()+'0')
+
+    def initButtonCatering(self):        
+        self.w2.buttonCatering=QPushButton(self.trUtf8("Repas"), self.w2)
+        self.w2.buttonCatering.setFixedSize(60,20)
+        self.w2.buttonCatering.move(140,200)
+        self.connect(self.w2.buttonCatering, SIGNAL("clicked()"), self.buttonCatering)
+
+    def buttonCatering(self):
+        self.w2.info.setText(self.trUtf8("click bouton repas.."))
+
     def initKeybLayout(self):
         self.initButtonSpace()
+        self.initButtonBackSpace()
+        self.initButtonZero()
+        self.initButtonCatering()
+
+        keyDataAlpha = [["a", 10, 120],
+                ["b", 30, 120],
+                ["c", 50, 120],
+                ["d", 70, 120],
+                ["e", 10, 140],
+                ["f", 30, 140],
+                ["g", 50, 140],
+                ["h", 70, 140],
+                ["i", 90, 140],
+                ["j", 110, 140],
+                ["k", 10, 160],
+                ["l", 30, 160],
+                ["m", 50, 160],
+                ["n", 70, 160],
+                ["o", 90, 160],
+                ["p", 110, 160],
+                ["q", 10, 180],
+                ["r", 30, 180],
+                ["s", 50, 180],
+                ["t", 70, 180],
+                ["u", 90, 180],
+                ["v", 110, 180],
+                ["w", 10, 200],
+                ["x", 30, 200],
+                ["y", 50, 200],
+                ["z", 70, 200]]
+
+        for index, k in enumerate(keyDataAlpha):
+            self.keyBoardAlpha[index]=keybButton(k[0], k[1], k[2], self.w2)
+
+        keyDataNum = [["7", 140, 120],
+                ["8", 160, 120],
+                ["9", 180, 120],
+                ["4", 140, 140],
+                ["5", 160, 140],
+                ["6", 180, 140],
+                ["1", 140, 160],
+                ["2", 160, 160],
+                ["3", 180, 160],
+                [".", 180, 180]]
         
-        self.buttonA=keybButton("a", 10, 120, self.w2)
-        self.buttonB=keybButton("b", 30, 120, self.w2)
-        self.buttonC=keybButton("c", 50, 120, self.w2)
-        self.buttonD=keybButton("d", 70, 120, self.w2)
-        self.buttonE=keybButton("e", 90, 120, self.w2)
-        self.buttonF=keybButton("f", 110, 120, self.w2)
+        for index, k in enumerate(keyDataNum):
+            self.keyBoardNum[index]=keybButton(k[0], k[1], k[2], self.w2)
 
 class keybButton:
+
     def __init__(self, letter, x, y, parent):
         self.letter=letter
         self.parent=parent
-        parent.button=QPushButton(parent.trUtf8(letter), parent)
-        parent.button.setFixedSize(20,20)
-        parent.button.move(x,y)
-        parent.connect(parent.button, SIGNAL("clicked()"), self.button)
+        self.keyButton=QPushButton(parent.trUtf8(self.letter), parent)
+        self.keyButton.setFixedSize(20,20)
+        self.keyButton.move(x,y)
+        parent.connect(self.keyButton, SIGNAL("clicked()"), self.buttonAction)
 
-    def button(self):
+    def buttonAction(self):
         self.parent.qle1.setText(self.parent.qle1.text()+self.letter)
+
 
