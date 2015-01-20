@@ -1,8 +1,6 @@
 #! /usr/bin/python
 #-*-coding: utf-8 -*-
 
-# Test Commit from Heaven
-
 import os,MySQLdb
 import PyQt4.QtGui as gui
 from PyQt4.QtGui import QWidget, QLabel, QPushButton, QListWidget, QLineEdit, QRadioButton, QButtonGroup, QTimeEdit
@@ -48,6 +46,13 @@ class myguiapp(QWidget):
         self.w1label1=QLabel(self.trUtf8("pamsti002 sys running.."), self)
         self.w1label1.move(10,10)
 
+        self.w1label2=QLabel(self.trUtf8("status:"), self)
+        self.w1label2.move(10,30)
+
+        self.w1label3=QLabel(self.trUtf8(".."), self)
+        self.w1label3.setFixedSize(280,18)
+        self.w1label3.move(60,30)
+
         self.w1button2=QPushButton(self.trUtf8("Quit"), self)
         self.w1button2.move(10,205)
         
@@ -56,7 +61,7 @@ class myguiapp(QWidget):
 
         self.connect(self.w1button2, SIGNAL("clicked()"), self.closeAll)
         
-        self.fdr = os.open(myfifor, os.O_RDONLY)
+        self.fdr = os.open(myfifor, os.O_RDONLY | os.O_NONBLOCK)
         
         self.notifier_r = QSocketNotifier(self.fdr, QSocketNotifier.Read)
         self.connect(self.notifier_r, SIGNAL('activated(int)'), self.readAllData)
@@ -65,7 +70,7 @@ class myguiapp(QWidget):
         self.w2.setFixedSize(widwith,widheight)
         self.w2.move(hpos,vpos)
 
-        self.w2.label1=QLabel(self.trUtf8("init wait..."), self.w2)
+        self.w2.label1=QLabel(self.trUtf8("init wait.."), self.w2)
         self.w2.label1.setFixedWidth(150)
         self.w2.label1.move(170,15)
           
@@ -138,13 +143,25 @@ class myguiapp(QWidget):
             if not data:
                 break
             readdata = self.trUtf8(data)
-            cur1.execute("SELECT firstname, lastname FROM person001 WHERE rfid = %s",readdata)
-            person = cur1.fetchone()
-            # person is a tuple
-            self.w2.label1.setText(self.trUtf8(str(person[0]).decode('latin-1').encode("utf-8") + " " + str(person[1]).decode('latin-1').encode("utf-8")))
-            self.w2.show()
-            self.w2.raise_()
-            self.w2.activateWindow()
+            if readdata == 'Hi':
+                self.w1label3.setText(self.trUtf8("received init signal.."))
+                fdw = os.open(myfifow, os.O_WRONLY)
+                os.write(fdw, "Ok\0")
+                os.close(fdw)
+            elif readdata == 'Bye':
+                self.w1label3.setText(self.trUtf8("received quit signal.."))
+                fdw = os.open(myfifow, os.O_WRONLY)
+                os.write(fdw, "Ok\0")
+                os.close(fdw)
+            else:
+                self.w1label3.setText(self.trUtf8("received " + readdata))
+                cur1.execute("SELECT firstname, lastname FROM person001 WHERE rfid = %s",readdata)
+                person = cur1.fetchone()
+                # person is a tuple
+                self.w2.label1.setText(self.trUtf8(str(person[0]).decode('latin-1').encode("utf-8") + " " + str(person[1]).decode('latin-1').encode("utf-8")))
+                self.w2.show()
+                self.w2.raise_()
+                self.w2.activateWindow()
 
     def writeAllData(self):
         global projlist,readdata
