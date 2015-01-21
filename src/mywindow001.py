@@ -3,7 +3,7 @@
 
 import os,MySQLdb
 import PyQt4.QtGui as gui
-from PyQt4.QtGui import QWidget, QLabel, QPushButton, QListWidget, QLineEdit, QRadioButton, QButtonGroup, QTimeEdit
+from PyQt4.QtGui import QWidget, QLabel, QPushButton, QListWidget, QLineEdit, QRadioButton, QButtonGroup, QTimeEdit, QCheckBox
 from PyQt4.QtCore import QSocketNotifier, SIGNAL, QTime
 
 myfifor = "/tmp/ctopyfifo"
@@ -134,6 +134,77 @@ class myguiapp(QWidget):
         self.w2.info.move(50,220)
 
         self.initKeybLayout()
+        
+        self.w3=QWidget()
+        self.w3.setFixedSize(widwith,widheight)
+        self.w3.move(hpos,vpos)
+        
+        self.w3.button1=QPushButton(self.trUtf8("Fermer"), self.w3)
+        self.w3.button1.move(10,205)
+        
+        self.w3.button2=QPushButton(self.trUtf8("Enregistrement"), self.w3)
+        self.w3.button2.move(120,205)
+        
+        self.connect(self.w3.button1, SIGNAL("clicked()"), self.closeCatering)
+        
+        self.w3.label1=QLabel(self.trUtf8("Enregistrement"), self.w3)
+        self.w3.label1.move(10,50)
+        
+        self.w3.label2=QLabel(self.trUtf8("Sélection"), self.w3)
+        self.w3.label2.move(10,70)
+        
+        self.w3.label3=QLabel(self.trUtf8("Midi"), self.w3)
+        self.w3.label3.move(120,90)
+        
+        self.w3.cb1E=QCheckBox('', self.w3)
+        self.w3.cb1E.setEnabled(False)
+        self.w3.cb1E.move(120,50)
+        
+        self.w3.cb1S=QCheckBox('', self.w3)
+        self.w3.cb1S.move(120,70)
+        
+        self.w3.label4=QLabel(self.trUtf8("Soir"), self.w3)
+        self.w3.label4.move(155,90)
+        
+        self.w3.cb2E=QCheckBox('', self.w3)
+        self.w3.cb2E.setEnabled(False)        
+        self.w3.cb2E.move(155,50)
+        
+        self.w3.cb2S=QCheckBox('', self.w3)
+        self.w3.cb2S.move(155,70)        
+        
+        self.w3.label5=QLabel(self.trUtf8("Nuit"), self.w3)
+        self.w3.label5.move(190,90)
+        
+        self.w3.cb3E=QCheckBox('', self.w3)
+        self.w3.cb3E.setEnabled(False)        
+        self.w3.cb3E.move(190,50)
+        
+        self.w3.cb3S=QCheckBox('', self.w3)
+        self.w3.cb3S.move(190,70)        
+        
+        self.w3.label6=QLabel(self.trUtf8("Aller"), self.w3)
+        self.w3.label6.move(225,90)
+        
+        self.w3.cb4E=QCheckBox('', self.w3)
+        self.w3.cb4E.setEnabled(False)        
+        self.w3.cb4E.move(225,50)
+        
+        self.w3.cb4S=QCheckBox('', self.w3)
+        self.w3.cb4S.move(225,70)        
+        
+        self.w3.label7=QLabel(self.trUtf8("Retour"), self.w3)
+        self.w3.label7.move(260,90)
+        
+        self.w3.cb5E=QCheckBox('', self.w3)
+        self.w3.cb5E.setEnabled(False)        
+        self.w3.cb5E.move(260,50)
+        
+        self.w3.cb5S=QCheckBox('', self.w3)
+        self.w3.cb5S.move(260,70)        
+        
+    def closeCatering(self):
+        self.w3.close()
 
     def readAllData(self):
         global readdata
@@ -251,7 +322,9 @@ class myguiapp(QWidget):
         self.connect(self.w2.buttonCatering, SIGNAL("clicked()"), self.buttonCatering)
 
     def buttonCatering(self):
-        self.w2.info.setText(self.trUtf8("click bouton repas.."))
+        self.w3.show()
+        self.w3.raise_()
+        self.w3.activateWindow()
 
     def initKeybLayout(self):
         self.initButtonSpace()
