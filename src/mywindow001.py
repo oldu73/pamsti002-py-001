@@ -16,7 +16,8 @@ try:
 except OSError:
     pass
 
-db = MySQLdb.connect(host="localhost", user="root", passwd="root", db="pamsti001")
+#db = MySQLdb.connect(host="localhost", user="root", passwd="root", db="pamsti001")
+db = MySQLdb.connect(host="localhost", user="pamti", passwd="pamti", db="x_juneebi_001")
 cur1 = db.cursor()
 cur2 = db.cursor()
 cur3 = db.cursor()
@@ -82,7 +83,8 @@ class myguiapp(QWidget):
         self.w2.projlist1.setFixedSize(300,75)
         self.w2.projlist1.move(10,40)
 
-        cur2.execute("SELECT projnumb,clientname,clientprojid,clientlocation FROM projdesc001")
+        #cur2.execute("SELECT projnumb,clientname,clientprojid,clientlocation FROM projdesc001")
+        cur2.execute("SELECT projnumb,clientname,clientprojid,clientlocation FROM project_001")
         projlist = cur2.fetchall()
       
         for item1 in projlist:
@@ -226,7 +228,8 @@ class myguiapp(QWidget):
                 os.close(fdw)
             else:
                 self.w1label3.setText(self.trUtf8("received " + readdata))
-                cur1.execute("SELECT firstname, lastname FROM person001 WHERE rfid = %s",readdata)
+                #cur1.execute("SELECT firstname, lastname FROM person001 WHERE rfid = %s",readdata)
+                cur1.execute("SELECT firstname, lastname FROM user_001 WHERE rfid = %s",readdata)
                 person = cur1.fetchone()
                 # person is a tuple
                 self.w2.label1.setText(self.trUtf8(str(person[0]).decode('latin-1').encode("utf-8") + " " + str(person[1]).decode('latin-1').encode("utf-8")))
