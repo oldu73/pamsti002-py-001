@@ -25,6 +25,7 @@ cur4 = db.cursor()
 
 projlist = None
 readdata = None
+usid = None
 
 widwith = 320
 widheight = 240
@@ -92,6 +93,8 @@ class myguiapp(QWidget):
             for item2 in item1:
                 tmpstr1 += item2.decode('latin-1').encode("utf-8") + " / "
             self.w2.projlist1.addItem(self.trUtf8(tmpstr1))
+            
+        self.w2.projlist1.clicked.connect(self.SelectedStatus)
     
         self.connect(self.w2.button1, SIGNAL("clicked()"), self.writeAllData)
         
@@ -229,20 +232,33 @@ class myguiapp(QWidget):
             else:
                 self.w1label3.setText(self.trUtf8("received " + readdata))
                 #cur1.execute("SELECT firstname, lastname FROM person001 WHERE rfid = %s",readdata)
-                cur1.execute("SELECT firstname, lastname FROM user_001 WHERE rfid = %s",readdata)
+                cur1.execute("SELECT firstname, lastname, usid FROM user_001 WHERE rfid = %s",readdata)
                 person = cur1.fetchone()
                 # person is a tuple
                 self.w2.label1.setText(self.trUtf8(str(person[0]).decode('latin-1').encode("utf-8") + " " + str(person[1]).decode('latin-1').encode("utf-8")))
+                usid = person[2]
+                self.w2.info.setText("utilisateur " + usid)
+                
+                self.w2.projlist1.clearSelection()
+                #self.w2.projlist1.setSelectionMode(QAbstractItemView.NoSelection)
+                self.w2.qle1.setText("")
+                
                 self.w2.show()
                 self.w2.raise_()
                 self.w2.activateWindow()
+
+    def SelectedStatus(self):
+        self.w2.info.setText(self.trUtf8("sel. proj: " + projlist[self.w2.projlist1.currentRow()][0]))
 
     def writeAllData(self):
         global projlist,readdata
         fdw = os.open(myfifow, os.O_WRONLY)
         os.write(fdw, "Ok\0")
         os.close(fdw)
-    
+
+        #self.w1label3.setText(self.trUtf8("sel. proj: " + projlist[self.w2.projlist1.currentRow()][0]))
+        #self.w1label3.setText(self.trUtf8("sel. proj: " + self.w2.projlist1.currentItem().text()))
+
         try:
             # Execute the SQL command
             cur3.execute("INSERT INTO timeisup001(rfid,projnumb) VALUES('%s','%s')"%(readdata,self.trUtf8(projlist[self.w2.projlist1.currentRow()][0])))
@@ -278,7 +294,9 @@ class myguiapp(QWidget):
         global projlist
         
         tmpstr0 = '%'+text+'%'
-        cur4.execute("""SELECT projnumb,clientname,clientprojid,clientlocation FROM projdesc001 WHERE 
+        #cur4.execute("""SELECT projnumb,clientname,clientprojid,clientlocation FROM projdesc001 WHERE 
+        #projnumb LIKE '%s' OR clientname LIKE '%s' OR clientprojid LIKE '%s' OR clientlocation LIKE '%s'""" % (tmpstr0,tmpstr0,tmpstr0,tmpstr0))
+        cur4.execute("""SELECT projnumb,clientname,clientprojid,clientlocation FROM project_001 WHERE 
         projnumb LIKE '%s' OR clientname LIKE '%s' OR clientprojid LIKE '%s' OR clientlocation LIKE '%s'""" % (tmpstr0,tmpstr0,tmpstr0,tmpstr0))
     
         self.w2.projlist1.clear()
@@ -391,5 +409,4 @@ class keybButton:
 
     def buttonAction(self):
         self.parent.qle1.setText(self.parent.qle1.text()+self.letter)
-
 
