@@ -26,6 +26,7 @@ cur4 = db.cursor()
 projlist = None
 readdata = None
 usid = None
+projectSelected = False
 
 widwith = 320
 widheight = 240
@@ -79,6 +80,7 @@ class myguiapp(QWidget):
         self.w2.button1=QPushButton(self.trUtf8("OK"), self.w2)
         self.w2.button1.setFixedSize(40,25)
         self.w2.button1.move(120,10)
+        self.w2.button1.setDisabled(True)
 
         self.w2.projlist1 = QListWidget(self.w2)
         self.w2.projlist1.setFixedSize(300,75)
@@ -94,7 +96,7 @@ class myguiapp(QWidget):
                 tmpstr1 += item2.decode('latin-1').encode("utf-8") + " / "
             self.w2.projlist1.addItem(self.trUtf8(tmpstr1))
             
-        self.w2.projlist1.clicked.connect(self.SelectedStatus)
+        self.w2.projlist1.clicked.connect(self.SelectedProjectStatus)
     
         self.connect(self.w2.button1, SIGNAL("clicked()"), self.writeAllData)
         
@@ -106,13 +108,15 @@ class myguiapp(QWidget):
         
         self.w2.rb1 = QRadioButton(self.trUtf8("matin"),self.w2)
         self.w2.rb1.move(210,120)
+        self.w2.rb1.clicked.connect(self.SelectedMatinStatus)
 
         self.w2.rb2 = QRadioButton(self.trUtf8("après-midi"),self.w2)
         self.w2.rb2.move(210,140)
+        self.w2.rb2.clicked.connect(self.SelectedApremStatus)
 
-        matin_aprem = QButtonGroup()
-        matin_aprem.addButton(self.w2.rb1)
-        matin_aprem.addButton(self.w2.rb2)
+        self.w2.matin_aprem = QButtonGroup()
+        self.w2.matin_aprem.addButton(self.w2.rb1)
+        self.w2.matin_aprem.addButton(self.w2.rb2)
 
         self.w2.hourEdit = QTimeEdit(self.w2)  
         self.w2.hourEdit.resize(45,40)
@@ -212,7 +216,7 @@ class myguiapp(QWidget):
         self.w3.close()
 
     def readAllData(self):
-        global readdata
+        global readdata, usid, projectSelected
         bufferSize = 1024
         while True:
             data = os.read(self.fdr, bufferSize)
@@ -238,16 +242,45 @@ class myguiapp(QWidget):
                 self.w2.label1.setText(self.trUtf8(str(person[0]).decode('latin-1').encode("utf-8") + " " + str(person[1]).decode('latin-1').encode("utf-8")))
                 usid = person[2]
                 self.w2.info.setText("utilisateur " + usid)
-                
+
                 self.w2.projlist1.clearSelection()
                 #self.w2.projlist1.setSelectionMode(QAbstractItemView.NoSelection)
                 self.w2.qle1.setText("")
-                
+                self.w2.button1.setDisabled(True)
+                self.w2.matin_aprem.setExclusive(False)
+                self.w2.rb1.setChecked(False)
+                self.w2.rb2.setChecked(False)
+                self.w2.matin_aprem.setExclusive(True)
+                projectSelected = False
+
                 self.w2.show()
                 self.w2.raise_()
                 self.w2.activateWindow()
 
-    def SelectedStatus(self):
+    def SelectedMatinStatus(self):
+        global projectSelected
+
+        if projectSelected:
+            self.w2.button1.setDisabled(False)
+
+        self.w2.info.setText(self.trUtf8("sel. matin"))
+
+    def SelectedApremStatus(self):
+        global projectSelected
+
+        if projectSelected:
+            self.w2.button1.setDisabled(False)
+
+        self.w2.info.setText(self.trUtf8("sel. après-midi"))
+
+    def SelectedProjectStatus(self):
+        global projectSelected
+
+        projectSelected = True
+
+        if (self.w2.rb1.isChecked() | self.w2.rb2.isChecked()):
+            self.w2.button1.setDisabled(False)
+
         self.w2.info.setText(self.trUtf8("sel. proj: " + projlist[self.w2.projlist1.currentRow()][0]))
 
     def writeAllData(self):
@@ -267,9 +300,9 @@ class myguiapp(QWidget):
         except:
             # Rollback in case there is any error
             db.rollback()
-    
+
         self.w2.close()
-              
+
     def closeAll(self):
 
         try:
@@ -316,6 +349,8 @@ class myguiapp(QWidget):
         self.connect(self.w2.buttonSpace, SIGNAL("clicked()"), self.buttonSpace)
 
     def buttonSpace(self):
+        self.w2.button1.setDisabled(True)
+        self.w2.info.setText("..")
         self.w2.qle1.setText(self.w2.qle1.text()+' ')
 
     def initButtonBackSpace(self):        
@@ -325,6 +360,8 @@ class myguiapp(QWidget):
         self.connect(self.w2.buttonBackSpace, SIGNAL("clicked()"), self.buttonBackSpace)
 
     def buttonBackSpace(self):
+        self.w2.button1.setDisabled(True)
+        self.w2.info.setText("..")
         self.w2.qle1.setText(self.w2.qle1.text()[:-1])
 
     def initButtonZero(self):        
@@ -334,6 +371,8 @@ class myguiapp(QWidget):
         self.connect(self.w2.buttonZero, SIGNAL("clicked()"), self.buttonZero)
 
     def buttonZero(self):
+        self.w2.button1.setDisabled(True)
+        self.w2.info.setText("..")
         self.w2.qle1.setText(self.w2.qle1.text()+'0')
 
     def initButtonCatering(self):        
@@ -408,5 +447,7 @@ class keybButton:
         parent.connect(self.keyButton, SIGNAL("clicked()"), self.buttonAction)
 
     def buttonAction(self):
+        self.parent.button1.setDisabled(True)
+        self.parent.info.setText("..")
         self.parent.qle1.setText(self.parent.qle1.text()+self.letter)
 
