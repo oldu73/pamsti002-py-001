@@ -3,6 +3,7 @@
 
 import os,MySQLdb
 import PyQt4.QtGui as gui
+import datetime
 from PyQt4.QtGui import QWidget, QLabel, QPushButton, QListWidget, QLineEdit, QRadioButton, QButtonGroup, QTimeEdit, QCheckBox
 from PyQt4.QtCore import QSocketNotifier, SIGNAL, QTime
 
@@ -27,6 +28,10 @@ projlist = None
 readdata = None
 usid = None
 projectSelected = False
+stopMode = False
+now = datetime.datetime.now()
+startHourMinute = None
+stopHourMinute = None
 
 widwith = 320
 widheight = 240
@@ -123,24 +128,26 @@ class myguiapp(QWidget):
         self.w2.hourEdit.move(212,180)
         self.w2.hourEdit.setDisplayFormat("HH")    
         self.w2.hourEdit.setTime(QTime.currentTime())   
+        self.w2.hourEdit.timeChanged.connect(self.startStopCompare)
         
         self.w2.minuteEdit = QTimeEdit(self.w2)  
         self.w2.minuteEdit.resize(45,40)
         self.w2.minuteEdit.move(266,180)
         self.w2.minuteEdit.setDisplayFormat("mm")    
         self.w2.minuteEdit.setTime(QTime.currentTime())
+        self.w2.minuteEdit.timeChanged.connect(self.startStopCompare)
 
         self.w2.timeDots=QLabel(self.trUtf8(":"), self.w2)
         self.w2.timeDots.setFixedWidth(10)
         self.w2.timeDots.move(260,192)
         
-        self.w2.infoLabel=QLabel(self.trUtf8("info:"), self.w2)
-        self.w2.infoLabel.setFixedWidth(30)
-        self.w2.infoLabel.move(10,220)
+        #self.w2.infoLabel=QLabel(self.trUtf8("info:"), self.w2)
+        #self.w2.infoLabel.setFixedWidth(30)
+        #self.w2.infoLabel.move(10,220)
 
         self.w2.info=QLabel(self.trUtf8("..."), self.w2)
         self.w2.info.setFixedWidth(260)
-        self.w2.info.move(50,220)
+        self.w2.info.move(10,220)
 
         self.initKeybLayout()
         
@@ -211,12 +218,26 @@ class myguiapp(QWidget):
         
         self.w3.cb5S=QCheckBox('', self.w3)
         self.w3.cb5S.move(260,70)        
+
+    def startStopCompare(self):
+        global stopHourMinute
+        
+        stopHourMinute = str(self.w2.hourEdit.dateTime().toString("HH") + ":" + self.w2.minuteEdit.dateTime().toString("mm"))
+        stopHourMinute = datetime.datetime.strptime(stopHourMinute, '%H:%M')
+        stopHourMinute = datetime.time(stopHourMinute.hour, stopHourMinute.minute)
+        
+        if stopHourMinute != None and startHourMinute != None and stopHourMinute > startHourMinute:
+            self.w2.button1.setDisabled(False)
+            self.w2.info.setText(self.trUtf8("Heure fin OK (début=" + str(startHourMinute)[0:5] + ")"))
+        else:
+            self.w2.button1.setDisabled(True)
+            self.w2.info.setText(self.trUtf8("* Heure fin < début (" + str(startHourMinute)[0:5] + ")"))
         
     def closeCatering(self):
         self.w3.close()
 
     def readAllData(self):
-        global readdata, usid, projectSelected
+        global readdata, usid, projectSelected, stopMode, startHourMinute
         bufferSize = 1024
         while True:
             data = os.read(self.fdr, bufferSize)
@@ -252,7 +273,38 @@ class myguiapp(QWidget):
                 self.w2.rb2.setChecked(False)
                 self.w2.matin_aprem.setExclusive(True)
                 projectSelected = False
+                self.w2.hourEdit.setTime(QTime.currentTime())
+                self.w2.minuteEdit.setTime(QTime.currentTime())
+                
+                cur1.execute("SELECT CASE WHEN tmstmanuoff IS NULL THEN CONCAT('Start on ', projnumb, ' @ ', date_format(tmstmanuon, '%Y-%m-%d %H:%i'), ' ',morning, '/', afternoon) ELSE CONCAT('Stop on ', projnumb, ' @ ', date_format(tmstmanuoff, '%Y-%m-%d %H:%i'), ' ',morning, '/', afternoon) END as tonoff from timeisup_001 where kyid = (select kyid from userlastid_001 where usid='"+usid+"')")
+                lastStartStop = cur1.fetchone()
+                if lastStartStop != None and "Start" in lastStartStop[0]:
+                    
+                    stopMode = True
+                    
+                    self.w2.projlist1.setDisabled(True)
+                    self.w2.rb1.setDisabled(True)
+                    self.w2.rb2.setDisabled(True)
+                    
+                    indexOfSlash = lastStartStop[0].index("/")
+                    
+                    if lastStartStop[0][indexOfSlash-1:indexOfSlash] is "1":
+                        self.w2.rb1.setChecked(True)
+                        self.w2.rb2.setChecked(False)
+                    else:
+                        self.w2.rb1.setChecked(False)
+                        self.w2.rb2.setChecked(True)
 
+                    indexOfDoubleDot = lastStartStop[0].index(":")
+                    startHourMinute = lastStartStop[0][indexOfDoubleDot-2:indexOfDoubleDot+3]
+                    startHourMinute = datetime.datetime.strptime(startHourMinute, '%H:%M')
+                    startHourMinute = datetime.time(startHourMinute.hour, startHourMinute.minute)
+                    
+                    self.w2.info.setText(lastStartStop[0])
+                else:
+                    #no lastID data
+                    stopMode = False
+                
                 self.w2.show()
                 self.w2.raise_()
                 self.w2.activateWindow()
@@ -284,7 +336,7 @@ class myguiapp(QWidget):
         self.w2.info.setText(self.trUtf8("sel. proj: " + projlist[self.w2.projlist1.currentRow()][0]))
 
     def writeAllData(self):
-        global projlist,readdata
+        global projlist,readdata,usid,now
         fdw = os.open(myfifow, os.O_WRONLY)
         os.write(fdw, "Ok\0")
         os.close(fdw)
@@ -292,13 +344,34 @@ class myguiapp(QWidget):
         #self.w1label3.setText(self.trUtf8("sel. proj: " + projlist[self.w2.projlist1.currentRow()][0]))
         #self.w1label3.setText(self.trUtf8("sel. proj: " + self.w2.projlist1.currentItem().text()))
 
+        stxTimestmp_manu = now.strftime("%Y-%m-%d") + " " + self.w2.hourEdit.dateTime().toString("HH") + ":" + self.w2.minuteEdit.dateTime().toString("mm") + ":00"
+        stxUsid = usid
+        stxProjnumb = self.trUtf8(projlist[self.w2.projlist1.currentRow()][0])
+        
+        if self.w2.rb1.isChecked():
+            stxMorning = 1
+        else:
+            stxMorning = 0
+        
+        if self.w2.rb2.isChecked():
+            stxAfternoon = 1
+        else:
+            stxAfternoon = 0
+        
         try:
             # Execute the SQL command
-            cur3.execute("INSERT INTO timeisup001(rfid,projnumb) VALUES('%s','%s')"%(readdata,self.trUtf8(projlist[self.w2.projlist1.currentRow()][0])))
+            cur3.execute("insert into timeisup_001(tmstmanuon,usid,projnumb,morning,afternoon,trajet_aller,trajet_retour,repas_midi,repas_soir,nuitee) values('%s', '%s', '%s', '%i', '%i', '%i', '%i', '%i', '%i', '%i')"%(stxTimestmp_manu, stxUsid, stxProjnumb, stxMorning, stxAfternoon, 0, 0, 0, 0, 0))
+            
             # Commit your changes in the database
             db.commit()
         except:
             # Rollback in case there is any error
+            db.rollback()
+
+        try:
+            cur3.execute("INSERT INTO userlastid_001 (usid,kyid) VALUES ('"+stxUsid+"',LAST_INSERT_ID()) ON DUPLICATE KEY UPDATE kyid=VALUES(kyid)")
+            db.commit()
+        except:
             db.rollback()
 
         self.w2.close()
