@@ -496,11 +496,51 @@ class myguiapp(QWidget):
         self.w3.raise_()
         self.w3.activateWindow()
 
+    def initButtonSetMinHour(self):        
+        self.w2.buttonCatering=QPushButton(self.trUtf8("<"), self.w2)
+        self.w2.buttonCatering.setFixedSize(20,20)
+        self.w2.buttonCatering.move(212,160)
+        self.connect(self.w2.buttonCatering, SIGNAL("clicked()"), self.buttonSetMinHour)
+
+    def buttonSetMinHour(self):
+        self.w2.hourEdit.setTime(QTime(00,00))
+
+    def initButtonSetMaxHour(self):        
+        self.w2.buttonCatering=QPushButton(self.trUtf8(">"), self.w2)
+        self.w2.buttonCatering.setFixedSize(20,20)
+        self.w2.buttonCatering.move(232,160)
+        self.connect(self.w2.buttonCatering, SIGNAL("clicked()"), self.buttonSetMaxHour)
+
+    def buttonSetMaxHour(self):
+        self.w2.hourEdit.setTime(QTime(23,00))
+
+    def initButtonSetMinMinute(self):        
+        self.w2.buttonCatering=QPushButton(self.trUtf8("<"), self.w2)
+        self.w2.buttonCatering.setFixedSize(20,20)
+        self.w2.buttonCatering.move(266,160)
+        self.connect(self.w2.buttonCatering, SIGNAL("clicked()"), self.buttonSetMinMinute)
+
+    def buttonSetMinMinute(self):
+        self.w2.minuteEdit.setTime(QTime(00,00))
+
+    def initButtonSetMaxMinute(self):        
+        self.w2.buttonCatering=QPushButton(self.trUtf8(">"), self.w2)
+        self.w2.buttonCatering.setFixedSize(20,20)
+        self.w2.buttonCatering.move(286,160)
+        self.connect(self.w2.buttonCatering, SIGNAL("clicked()"), self.buttonSetMaxMinute)
+
+    def buttonSetMaxMinute(self):
+        self.w2.minuteEdit.setTime(QTime(00,59))
+        
     def initKeybLayout(self):
         self.initButtonSpace()
         self.initButtonBackSpace()
         self.initButtonZero()
         self.initButtonCatering()
+        self.initButtonSetMinHour()
+        self.initButtonSetMaxHour()
+        self.initButtonSetMinMinute()
+        self.initButtonSetMaxMinute()
 
         keyDataAlpha = [["a", 10, 120],
                 ["b", 30, 120],
