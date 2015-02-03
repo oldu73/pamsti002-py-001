@@ -33,6 +33,7 @@ now = datetime.datetime.now()
 startHourMinute = None
 stopHourMinute = None
 lastId = None
+catOfDay = None
 
 widwith = 320
 widheight = 240
@@ -234,7 +235,7 @@ class myguiapp(QWidget):
         self.w3.close()
 
     def readAllData(self):
-        global readdata, usid, projectSelected, stopMode, startHourMinute
+        global readdata, usid, projectSelected, stopMode, startHourMinute, catOfDay
         bufferSize = 1024
         while True:
             data = os.read(self.fdr, bufferSize)
@@ -261,6 +262,9 @@ class myguiapp(QWidget):
                 usid = person[2]
                 self.w2.info.setText("utilisateur " + usid)
                 self.w2.projlist1.clearSelection()
+                #
+                #self.w2.projlist1... set focus on first row. On first load it's okay but after it stay on last position which is not a clean behavior ###############################################################################################################
+                #
                 self.w2.qle1.setText("")
                 self.w2.matin_aprem.setExclusive(False)
                 self.w2.rb1.setChecked(False)
@@ -297,6 +301,7 @@ class myguiapp(QWidget):
                     self.startStopCompare()
                     
                     self.w2.info.setText(lastStartStop[0])
+                    
                 else:
                     #no lastID data
                     stopMode = False
@@ -309,6 +314,16 @@ class myguiapp(QWidget):
                     
                     if lastStartStop != None:
                         self.w2.info.setText(lastStartStop[0])
+                
+                tmpStr = "select kyid from cateringSU_001 where usid='%s' AND date = CURDATE()" % (usid)
+                cur1.execute(tmpStr)
+
+                catOfDayRes = cur1.fetchone()
+                if catOfDayRes != None:
+                    catOfDay = catOfDayRes[0]
+                    self.w2.buttonCatering.setDisabled(False)
+                else:
+                    self.w2.buttonCatering.setDisabled(True)           
                 
                 self.w2.show()
                 self.w2.raise_()
@@ -485,11 +500,16 @@ class myguiapp(QWidget):
         self.w2.info.setText("..")
         self.w2.qle1.setText(self.w2.qle1.text()+'0')
 
-    def initButtonCatering(self):        
+    def initButtonCatering(self):     
+        global catOfDay
+
         self.w2.buttonCatering=QPushButton(self.trUtf8("Repas"), self.w2)
         self.w2.buttonCatering.setFixedSize(60,20)
         self.w2.buttonCatering.move(140,200)
         self.connect(self.w2.buttonCatering, SIGNAL("clicked()"), self.buttonCatering)
+        
+        if catOfDay == None:
+            self.w2.buttonCatering.setDisabled(True)
 
     def buttonCatering(self):
         self.w3.show()
@@ -497,37 +517,37 @@ class myguiapp(QWidget):
         self.w3.activateWindow()
 
     def initButtonSetMinHour(self):        
-        self.w2.buttonCatering=QPushButton(self.trUtf8("<"), self.w2)
-        self.w2.buttonCatering.setFixedSize(20,20)
-        self.w2.buttonCatering.move(212,160)
-        self.connect(self.w2.buttonCatering, SIGNAL("clicked()"), self.buttonSetMinHour)
+        self.w2.buttonSetMinHour=QPushButton(self.trUtf8("<"), self.w2)
+        self.w2.buttonSetMinHour.setFixedSize(20,20)
+        self.w2.buttonSetMinHour.move(212,160)
+        self.connect(self.w2.buttonSetMinHour, SIGNAL("clicked()"), self.buttonSetMinHour)
 
     def buttonSetMinHour(self):
         self.w2.hourEdit.setTime(QTime(00,00))
 
     def initButtonSetMaxHour(self):        
-        self.w2.buttonCatering=QPushButton(self.trUtf8(">"), self.w2)
-        self.w2.buttonCatering.setFixedSize(20,20)
-        self.w2.buttonCatering.move(232,160)
-        self.connect(self.w2.buttonCatering, SIGNAL("clicked()"), self.buttonSetMaxHour)
+        self.w2.buttonSetMaxHour=QPushButton(self.trUtf8(">"), self.w2)
+        self.w2.buttonSetMaxHour.setFixedSize(20,20)
+        self.w2.buttonSetMaxHour.move(232,160)
+        self.connect(self.w2.buttonSetMaxHour, SIGNAL("clicked()"), self.buttonSetMaxHour)
 
     def buttonSetMaxHour(self):
         self.w2.hourEdit.setTime(QTime(23,00))
 
     def initButtonSetMinMinute(self):        
-        self.w2.buttonCatering=QPushButton(self.trUtf8("<"), self.w2)
-        self.w2.buttonCatering.setFixedSize(20,20)
-        self.w2.buttonCatering.move(266,160)
-        self.connect(self.w2.buttonCatering, SIGNAL("clicked()"), self.buttonSetMinMinute)
+        self.w2.buttonSetMinMinute=QPushButton(self.trUtf8("<"), self.w2)
+        self.w2.buttonSetMinMinute.setFixedSize(20,20)
+        self.w2.buttonSetMinMinute.move(266,160)
+        self.connect(self.w2.buttonSetMinMinute, SIGNAL("clicked()"), self.buttonSetMinMinute)
 
     def buttonSetMinMinute(self):
         self.w2.minuteEdit.setTime(QTime(00,00))
 
     def initButtonSetMaxMinute(self):        
-        self.w2.buttonCatering=QPushButton(self.trUtf8(">"), self.w2)
-        self.w2.buttonCatering.setFixedSize(20,20)
-        self.w2.buttonCatering.move(286,160)
-        self.connect(self.w2.buttonCatering, SIGNAL("clicked()"), self.buttonSetMaxMinute)
+        self.w2.buttonSetMaxMinute=QPushButton(self.trUtf8(">"), self.w2)
+        self.w2.buttonSetMaxMinute.setFixedSize(20,20)
+        self.w2.buttonSetMaxMinute.move(286,160)
+        self.connect(self.w2.buttonSetMaxMinute, SIGNAL("clicked()"), self.buttonSetMaxMinute)
 
     def buttonSetMaxMinute(self):
         self.w2.minuteEdit.setTime(QTime(00,59))
