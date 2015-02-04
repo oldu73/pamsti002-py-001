@@ -158,6 +158,7 @@ class myguiapp(QWidget):
         self.w3.button2.move(120,205)
         
         self.connect(self.w3.button1, SIGNAL("clicked()"), self.closeCatering)
+        self.connect(self.w3.button2, SIGNAL("clicked()"), self.recordCatering)
         
         self.w3.label1=QLabel(self.trUtf8("Enregistrement"), self.w3)
         self.w3.label1.move(10,50)
@@ -510,11 +511,99 @@ class myguiapp(QWidget):
         
         if catOfDay == None:
             self.w2.buttonCatering.setDisabled(True)
-
+    
     def buttonCatering(self):
+        global catOfDay
+        
+        tmpStr = "select midi,soir,nuitee,aller,retour from cateringSU_001 where kyid='%s'" % (catOfDay)
+        cur1.execute(tmpStr)
+
+        tmpRes = cur1.fetchone()
+        if tmpRes != None:
+            midi = tmpRes[0]
+            soir = tmpRes[1]
+            nuitee = tmpRes[2]
+            aller = tmpRes[3]
+            retour = tmpRes[4]
+            
+            if midi == 1:
+                self.w3.cb1E.setChecked(True)
+                self.w3.cb1S.setChecked(True)
+            else:
+                self.w3.cb1E.setChecked(False)
+                self.w3.cb1S.setChecked(False)                
+        
+            if soir == 1:
+                self.w3.cb2E.setChecked(True)
+                self.w3.cb2S.setChecked(True)
+            else:
+                self.w3.cb2E.setChecked(False)
+                self.w3.cb2S.setChecked(False)  
+        
+            if nuitee == 1:
+                self.w3.cb3E.setChecked(True)
+                self.w3.cb3S.setChecked(True)
+            else:
+                self.w3.cb3E.setChecked(False)
+                self.w3.cb3S.setChecked(False)
+        
+            if aller == 1:
+                self.w3.cb4E.setChecked(True)
+                self.w3.cb4S.setChecked(True)
+            else:
+                self.w3.cb4E.setChecked(False)
+                self.w3.cb4S.setChecked(False)
+        
+            if retour == 1:
+                self.w3.cb5E.setChecked(True)
+                self.w3.cb5S.setChecked(True)
+            else:
+                self.w3.cb5E.setChecked(False)
+                self.w3.cb5S.setChecked(False) 
+        
         self.w3.show()
         self.w3.raise_()
         self.w3.activateWindow()
+
+    def recordCatering(self):
+        global catOfDay
+
+        if self.w3.cb1S.isChecked():
+            midi = 1
+        else:
+            midi = 0
+
+        if self.w3.cb2S.isChecked():
+            soir = 1
+        else:
+            soir = 0
+
+        if self.w3.cb3S.isChecked():
+            nuitee = 1
+        else:
+            nuitee = 0
+
+        if self.w3.cb4S.isChecked():
+            aller = 1
+        else:
+            aller = 0
+
+        if self.w3.cb5S.isChecked():
+            retour = 1
+        else:
+            retour = 0
+
+        tmpStr = "UPDATE timeisup_001 SET trajet_aller='%i',trajet_retour='%i',repas_midi='%i',repas_soir='%i',nuitee='%i' WHERE kyid='%s'" % (aller,retour,midi,soir,nuitee,catOfDay)
+        
+        try:
+            cur3.execute(tmpStr)
+            db.commit()
+        except:
+            db.rollback()
+            print "* NOT OK"
+            print(cur3._last_executed)
+
+        self.buttonCatering()
 
     def initButtonSetMinHour(self):        
         self.w2.buttonSetMinHour=QPushButton(self.trUtf8("<"), self.w2)
