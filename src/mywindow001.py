@@ -4,9 +4,11 @@
 import os,MySQLdb
 import PyQt4.QtGui as gui
 import datetime
+from PyQt4 import QtGui, QtCore
 from PyQt4.QtGui import QWidget, QLabel, QPushButton, QListWidget, QLineEdit, QRadioButton, QButtonGroup, QTimeEdit, QCheckBox
 from PyQt4.QtCore import QSocketNotifier, SIGNAL, QTime
 from time import localtime, strftime
+import time
 
 myfifor = "/tmp/ctopyfifo"
 myfifow = "/tmp/pytocfifo"
@@ -34,6 +36,8 @@ startHourMinute = None
 stopHourMinute = None
 lastId = None
 catOfDay = None
+hpos = None
+vpos = None
 
 widwith = 320
 widheight = 240
@@ -43,15 +47,25 @@ class myguiapp(QWidget):
     keyBoardAlpha = {}
     keyBoardNum = {}
     
-    def __init__(self):
-        global projlist
-        global clickonkeyb
-    
-        QWidget.__init__(self)
+    def __init__(self, parent = None):
+        global projlist,clickonkeyb
         
+        QWidget.__init__(self)
+
+        self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+
         screen = gui.QDesktopWidget().screenGeometry()
         hpos = (screen.width() - widwith) / 2
         vpos = (screen.height() - widheight) / 2
+
+        self.lcd = QtGui.QLCDNumber(self)
+        self.lcd.setDigitCount(5)
+        self.lcd.move(10,75)
+        self.lcd.setFixedSize(300,100)
+        
+        self.timer = QtCore.QTimer(self)
+        self.timer.timeout.connect(self.Time)
+        self.timer.start(1000)
 
         self.w1label1=QLabel(self.trUtf8("pamsti002 sys running.."), self)
         self.w1label1.move(10,10)
@@ -64,6 +78,7 @@ class myguiapp(QWidget):
         self.w1label3.move(60,30)
 
         self.w1button2=QPushButton(self.trUtf8("Quit"), self)
+        self.w1button2.setDisabled(True)
         self.w1button2.move(10,205)
         
         self.setFixedSize(widwith,widheight)
@@ -77,6 +92,7 @@ class myguiapp(QWidget):
         self.connect(self.notifier_r, SIGNAL('activated(int)'), self.readAllData)
 
         self.w2=QWidget()
+        self.w2.setWindowFlags(QtCore.Qt.FramelessWindowHint)
         self.w2.setFixedSize(widwith,widheight)
         self.w2.move(hpos,vpos)
 
@@ -148,6 +164,7 @@ class myguiapp(QWidget):
         self.initKeybLayout()
         
         self.w3=QWidget()
+        self.w3.setWindowFlags(QtCore.Qt.FramelessWindowHint)
         self.w3.setFixedSize(widwith,widheight)
         self.w3.move(hpos,vpos)
         
@@ -214,7 +231,11 @@ class myguiapp(QWidget):
         self.w3.cb5E.move(260,50)
         
         self.w3.cb5S=QCheckBox('', self.w3)
-        self.w3.cb5S.move(260,70)        
+        self.w3.cb5S.move(260,70)
+
+    def Time(self):
+        currtime = time.strftime('%H:%M')
+        self.lcd.display(currtime)
 
     def startStopCompare(self):
         global stopHourMinute
@@ -253,6 +274,7 @@ class myguiapp(QWidget):
                 fdw = os.open(myfifow, os.O_WRONLY)
                 os.write(fdw, "Ok\0")
                 os.close(fdw)
+                self.w1button2.setDisabled(False)
             else:
                 self.w1label3.setText(self.trUtf8("received " + readdata))
 
